@@ -1,0 +1,1 @@
+Make sure to have [tfsec](https://github.com/aquasecurity/tfsec) installed and available in your PATH.
