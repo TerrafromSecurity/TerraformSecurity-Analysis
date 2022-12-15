@@ -1,0 +1,1 @@
+Can you generate terraform code from these docstrings and add them as comment: "Provider AWS in region var.aws_region" and "Create variable called aws_region that is a string type with default value "us-east-1""

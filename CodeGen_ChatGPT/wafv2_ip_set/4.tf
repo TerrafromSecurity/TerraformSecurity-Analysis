@@ -1,0 +1,12 @@
+# Provider AWS in region "us-east-1"
+provider "aws" {
+  region = "us-east-1"
+}
+
+# create wafv2 ip set, use regional scope, assign a name and IPV4 address version. Set addresses to 4.3.3.4/32 and 2.8.1.9/32
+resource "aws_wafv2_ip_set" "my_ip_set" {
+  scope = "REGIONAL"
+  name  = "my_ip_set"
+  ip_address_version = "IPV4"
+  addresses = ["4.3.3.4/32", "2.8.1.9/32"]
+}
