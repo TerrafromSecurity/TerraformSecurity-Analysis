@@ -1,0 +1,10 @@
+[
+  {
+    "prompt": "Can you create a Terraform script to deploy an AWS EC2 instance?",
+    "response": "Certainly! Here is an example Terraform script that deploys an AWS EC2 instance:\n\n```\n# Configure the AWS provider\nprovider \"aws\" {\n  access_key = \"<ACCESS_KEY>\"\n  secret_key = \"<SECRET_KEY>\"\n  region     = \"<REGION>\"\n}\n\n# Create the EC2 instance\nresource \"aws_instance\" \"example\" {\n  ami           = \"<AMI_ID>\"\n  instance_type = \"t2.micro\"\n\n  tags = {\n    Name = \"Example EC2 instance\"\n  }\n}\n```\n\nThis script does the following:\n\n1. Configures the AWS provider using the provided access key, secret key, and region.\n2. Creates an EC2 instance using the specified AMI ID and instance type. The instance is also given a Name tag.\n\nTo use this script, you will need to replace the placeholders with your own values. The `<ACCESS_KEY>` and `<SECRET_KEY>` placeholders should be replaced with your AWS access key and secret key, respectively. The `<REGION>` placeholder should be replaced with the desired region code (e.g. \"us-east-1\"). The `<AMI_ID>` placeholder should be replaced with the ID of the AMI that you want to use to launch the instance.\n\nI hope this helps! Let me know if you have any questions."
+  },
+  {
+    "prompt": "Can you enable at rest encryption?",
+    "response": "Yes, you can enable at-rest encryption for an EC2 instance by using the `ebs_block_device` block in your Terraform script. Here's an example of how you can do this:\n\n```\nresource \"aws_instance\" \"example\" {\n  # Other configuration options...\n\n  ebs_block_device {\n    device_name = \"/dev/sda1\"\n    volume_size = 8\n    encrypted   = true\n  }\n}\n```\n\nThis will create an encrypted EBS volume and attach it to the EC2 instance as the root volume (`/dev/sda1`). The volume will have a size of 8 GB.\n\nYou can also enable encryption for additional EBS volumes by adding additional `ebs_block_device` blocks with different `device_name` values.\n\nI hope this helps! Let me know if you have any questions."
+  }
+]
