@@ -1,0 +1,9 @@
+pandas
+numpy
+plotly
+matplotlib
+jupyter
+git+https://github.com/mmabrouk/chatgpt-wrapper
+playwright
+pypandoc
+panflute
