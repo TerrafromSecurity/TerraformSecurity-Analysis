@@ -34,52 +34,46 @@ debug = True
 
 bot = ChatGPT()
 for i, prompt in enumerate(prompts):
-    if debug:
-        print(f"Prompt 1: {prompt}")
-    # (1) Get first response and save to file
-    response = bot.ask(prompt)
-    print(response)
-    f = open("tmp/chatgpt.md", "w")
-    f.write(response)
-    f.close()
+    data = []
+    for i in range(2):
+        if debug:
+            print(f"Prompt 1: {prompt}")
 
-    if debug:
-        print("Response 1:", response)
+        # (1) Get first response and save to file
+        response = bot.ask(prompt)
+        print("ChatGPT: \n", response)
+        f = open("tmp/chatgpt.md", "w")
+        f.write(response)
+        f.close()
 
-    # (2) Extract code from markdown file and write to terraform file
-    code = "\n".join(extract_code(response))
-    f = open(f"tmp/chatgpt.tf", "w")
-    f.write(code)
-    f.close()
-    # break
-    # (3) run tfsec on the terraform file
-    result = subprocess.run(["tfsec", "tmp/", "-f", "csv"], capture_output=True)
+        # (2) Extract code from markdown file and write to terraform file
+        code = "\n".join(extract_code(response))
+        f = open(f"tmp/chatgpt.tf", "w")
+        f.write(code)
+        f.close()
+        # break
+        # (3) run tfsec on the terraform file
+        result = subprocess.run(["tfsec", "tmp/", "-f", "csv"], capture_output=True)
 
-    # (4) extract tfsec descriptions from the csv output
-    csv = io.StringIO()
-    csv.write(result.stdout.decode("utf-8"))
-    csv.seek(0)
-    df = pd.read_csv(csv, header="infer")
-    prompt_2 = "\n".join(df["description"].tolist())
+        # (4) extract tfsec descriptions from the csv output
+        csv = io.StringIO()
+        csv.write(result.stdout.decode("utf-8"))
+        csv.seek(0)
+        df = pd.read_csv(csv, header="infer")
 
-    if debug:
-        print("Prompt 2:", prompt_2)
 
-    # (5) send the tfsec output to chatgpt
-    response_2 = bot.ask(prompt_2)
-    print(response)
-    if debug:
-        print("Response 2:", response_2)
+        # (5) append to data list
+        data.append({
+            "iteration": i,
+            "prompt": prompt,
+            "response": response,
+            "tfsec": result.stdout.decode("utf-8"),
+        })
 
-    # (6) save the output to a file
-    data = [{
-        "prompt": prompt,
-        "response": response
-    }, {
-        "prompt": prompt_2,
-        "response": response_2
-    }
-    ]
+        # this is the new prompt
+        prompt = "\n".join(df["description"].tolist())
+
+
 
     f = open(f"data/prompts/{i}.json", "w")
     f.write(json.dumps(data))
