@@ -9,10 +9,17 @@ from pypandoc.pandoc_download import download_pandoc
 # download_pandoc()
 
 prompts = [
-    "Can you create a Terraform script to deploy an AWS EC2 instance?",
+    "Deploy an AWS EC2 instance.",
     # "Can you create a VPC gateway instance with elastic IP on AWS?",
     # "Can you create a S3 Bucket on AWS?",
     # "Can you create an EC2 instance with a public IP on AWS?",
+]
+
+settingsPrompts = [
+    "Can you create terraform configuration code in the following?",
+    "Don't forget the starting terraform block.",
+    "Only print out a single code block per response.",
+    "The code should be generated based on the following description."
 ]
 
 
@@ -33,11 +40,13 @@ def extract_code(file_name: str) -> list[str]:
 debug = True
 
 bot = ChatGPT()
+settings = " ".join(settingsPrompts)
 for i, prompt in enumerate(prompts):
     data = []
-    for i in range(2):
+    prompt = settings + "\n" + prompt
+    for j in range(3):
         if debug:
-            print(f"Prompt 1: {prompt}")
+            print(f"Prompt {i + 1}: {prompt}")
 
         # (1) Get first response and save to file
         response = bot.ask(prompt)
@@ -64,14 +73,16 @@ for i, prompt in enumerate(prompts):
 
         # (5) append to data list
         data.append({
-            "iteration": i,
+            "iteration": j + 1,
             "prompt": prompt,
             "response": response,
             "tfsec": result.stdout.decode("utf-8"),
         })
 
         # this is the new prompt
-        prompt = "\n".join(df["description"].tolist())
+        prompt = \
+            "I detect the following security vulnerabilities, can you fix them?\n" \
+            + ("\n".join(df["description"].tolist()))
 
 
 
