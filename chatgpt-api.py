@@ -4,7 +4,7 @@ import pypandoc
 import panflute
 from chatgpt_wrapper import ChatGPT
 import json
-import pandas as pd
+import os
 from pypandoc.pandoc_download import download_pandoc
 # download_pandoc()
 
@@ -41,51 +41,74 @@ debug = True
 
 bot = ChatGPT()
 settings = " ".join(settingsPrompts)
+
+# generate tmp folder if it does not exist
+if not os.path.exists("tmp"):
+    os.makedirs("tmp")
+
+# generate prompts and data folder if they do not exist
+if not os.path.exists("data/prompts"):
+    os.makedirs("data/prompts")
+
 for i, prompt in enumerate(prompts):
     data = []
+    # for the first question to chatgpt we add some settings
     prompt = settings + "\n" + prompt
-    for j in range(3):
+    issues = 100000
+    iteration = 0
+    while True:
         if debug:
             print(f"Prompt {i + 1}: {prompt}")
 
         # (1) Get first response and save to file
         response = bot.ask(prompt)
         print("ChatGPT: \n", response)
-        f = open("tmp/chatgpt.md", "w")
+        f = open("tmp/chatgpt.md", "w+")
         f.write(response)
         f.close()
 
+        if debug:
+            print(f"write response in tf file")
         # (2) Extract code from markdown file and write to terraform file
         code = "\n".join(extract_code(response))
-        f = open(f"tmp/chatgpt.tf", "w")
+        f = open(f"tmp\chatgpt.tf", "w+")
         f.write(code)
         f.close()
+
+        if debug:
+            print(f"run tfsec")
         # break
         # (3) run tfsec on the terraform file
-        result = subprocess.run(["tfsec", "tmp/", "-f", "csv"], capture_output=True)
+        result = subprocess.run(["tfsec", "tmp/", "-f", "json"], capture_output=True)
 
         # (4) extract tfsec descriptions from the csv output
-        csv = io.StringIO()
-        csv.write(result.stdout.decode("utf-8"))
-        csv.seek(0)
-        df = pd.read_csv(csv, header="infer")
-
+        tfSecOutput = json.loads(result.stdout.decode("utf-8"))
 
         # (5) append to data list
         data.append({
-            "iteration": j + 1,
+            "iteration": iteration + 1,
             "prompt": prompt,
             "response": response,
             "tfsec": result.stdout.decode("utf-8"),
         })
 
         # this is the new prompt
-        prompt = \
-            "I detect the following security vulnerabilities, can you fix them?\n" \
-            + ("\n".join(df["description"].tolist()))
+        prompt = "I detect the following security vulnerabilities, can you fix them?\n"
 
+        counter = 0
+        for issue in tfSecOutput["results"]:
+            prompt = prompt + "Vulnerablitity " + str(counter) + ":\n"
+            prompt = prompt + "rule_description: " + issue['rule_description'] + "\n"
+            prompt = prompt + "impact: " + issue['impact'] + "\n"
+            prompt = prompt + "resolution: " + issue['resolution'] + "\n"
+            counter = counter + 1
+        
+        # the while loop stops once we got the same amout of issues or more then in the previous run
+        if counter >= issues | counter == 0:
+            break
+        else:
+            issues = counter
 
-
-    f = open(f"data/prompts/{i}.json", "w")
+    f = open(f"data/prompts/{i}.json", "w+")
     f.write(json.dumps(data))
     f.close()
