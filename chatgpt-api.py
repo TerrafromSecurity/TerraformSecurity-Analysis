@@ -71,7 +71,7 @@ for i, prompt in enumerate(prompts):
             print(f"write response in tf file")
         # (2) Extract code from markdown file and write to terraform file
         code = "\n".join(extract_code(response))
-        f = open(f"tmp\chatgpt.tf", "w+")
+        f = open(f"tmp/chatgpt.tf", "w+")
         f.write(code)
         f.close()
 
