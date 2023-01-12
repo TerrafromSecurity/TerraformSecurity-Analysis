@@ -54,9 +54,8 @@ for i, prompt in enumerate(prompts):
     data = []
     # for the first question to chatgpt we add some settings
     prompt = settings + "\n" + prompt
-    issues = 100000
     iteration = 0
-    # use some high integer as an upper bound
+        # use some high integer as an upper bound
     number_results_previous_run = 10**10
     while True:
         if debug:
@@ -74,6 +73,8 @@ for i, prompt in enumerate(prompts):
             print(f"write response in tf file")
         # (2) Extract code from markdown file and write to terraform file
         code = "\n".join(extract_code(response))
+        if os.path.exists("tmp/chatgpt.tf"):
+            os.remove("tmp/chatgpt.tf")
         f = open(f"tmp/chatgpt.tf", "w+")
         f.write(code)
         f.close()
@@ -82,10 +83,7 @@ for i, prompt in enumerate(prompts):
             print(f"run tfsec")
         # break
         # (3) run tfsec on the terraform file
-        result = subprocess.run(["tfsec", "tmp/", "-f", "json"], capture_output=True)
-
-        if debug:
-            print(str(result))
+        result = subprocess.run(["tfsec", f"tmp/", "-f", "json"], capture_output=True)    
 
         # (4) extract tfsec descriptions from the csv output
         tfSecOutput = json.loads(result.stdout.decode("utf-8"))
@@ -103,20 +101,25 @@ for i, prompt in enumerate(prompts):
         f.close()
 
         # this is the new prompt
-        prompt = "I detect the following security vulnerabilities, can you fix them in the previous code example and print it into one code block?\n"
+        prompt = "I detected the following security vulnerabilities, can you fix them in the previous code example and print it into one code block?\n"
 
-        if len(tfSecOutput) == number_results_previous_run:
-            print("No new results")
+        counter = 0
+
+        if tfSecOutput["results"] == None:
+            print("All issues have been solved")
             break
-        number_results_previous_run = len(tfSecOutput)
-        print("Number of security issues: ", len(tfSecOutput))
 
         for i, issue in enumerate(tfSecOutput["results"]):
             prompt = prompt + "Vulnerablitity " + str(i) + ":\n"
-            prompt = prompt + "rule_description: " + issue['rule_description'] + "\n"
-            prompt = prompt + "impact: " + issue['impact'] + "\n"
-            prompt = prompt + "resolution: " + issue['resolution'] + "\n"
+            prompt = prompt + str(issue) + "\n"
+            counter += 1
+        
+        if counter >= number_results_previous_run:
+            print("No new results")
+            break
+        number_results_previous_run = counter
+        print(f"Number of security issues: {counter}")
 
-    f = open(f"data/prompts/prompt_{i}.json", "w+")
+    f = open(f"data/prompts/{i}.json", "w+")
     f.write(json.dumps(data))
     f.close()
