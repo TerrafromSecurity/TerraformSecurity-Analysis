@@ -105,26 +105,17 @@ for i, prompt in enumerate(prompts):
         # this is the new prompt
         prompt = "I detect the following security vulnerabilities, can you fix them in the previous code example and print it into one code block?\n"
 
-        counter = 0
-
         if len(tfSecOutput) == number_results_previous_run:
             print("No new results")
             break
         number_results_previous_run = len(tfSecOutput)
         print("Number of security issues: ", len(tfSecOutput))
 
-        for issue in tfSecOutput["results"]:
-            prompt = prompt + "Vulnerablitity " + str(counter) + ":\n"
+        for i, issue in enumerate(tfSecOutput["results"]):
+            prompt = prompt + "Vulnerablitity " + str(i) + ":\n"
             prompt = prompt + "rule_description: " + issue['rule_description'] + "\n"
             prompt = prompt + "impact: " + issue['impact'] + "\n"
             prompt = prompt + "resolution: " + issue['resolution'] + "\n"
-            counter = counter + 1
-        
-        # the while loop stops once we got the same amout of issues or more then in the previous run
-        if counter >= issues | counter == 0:
-            break
-        else:
-            issues = counter
 
     f = open(f"data/prompts/prompt_{i}.json", "w+")
     f.write(json.dumps(data))
