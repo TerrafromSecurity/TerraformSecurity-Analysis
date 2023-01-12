@@ -56,11 +56,14 @@ for i, prompt in enumerate(prompts):
     prompt = settings + "\n" + prompt
     issues = 100000
     iteration = 0
+    # use some high integer as an upper bound
+    number_results_previous_run = 10**10
     while True:
         if debug:
             print(f"Prompt {i + 1}: {prompt}")
 
         # (1) Get first response and save to file
+        print("Waiting for response ... ")
         response = bot.ask(prompt)
         print("ChatGPT: \n", response)
         f = open("tmp/chatgpt.md", "w+")
@@ -95,10 +98,21 @@ for i, prompt in enumerate(prompts):
             "tfsec": str(result.stdout.decode("utf-8")),
         })
 
+        f = open(f"data/prompts/prompt_{i}_save_{iteration}.json", "w+")
+        f.write(json.dumps(data))
+        f.close()
+
         # this is the new prompt
         prompt = "I detect the following security vulnerabilities, can you fix them in the previous code example and print it into one code block?\n"
 
         counter = 0
+
+        if len(tfSecOutput) == number_results_previous_run:
+            print("No new results")
+            break
+        number_results_previous_run = len(tfSecOutput)
+        print("Number of security issues: ", len(tfSecOutput))
+
         for issue in tfSecOutput["results"]:
             prompt = prompt + "Vulnerablitity " + str(counter) + ":\n"
             prompt = prompt + "rule_description: " + issue['rule_description'] + "\n"
@@ -112,6 +126,6 @@ for i, prompt in enumerate(prompts):
         else:
             issues = counter
 
-    f = open(f"data/prompts/{i}.json", "w+")
+    f = open(f"data/prompts/prompt_{i}.json", "w+")
     f.write(json.dumps(data))
     f.close()
