@@ -6,7 +6,7 @@ from chatgpt_wrapper import ChatGPT
 import json
 import os
 from pypandoc.pandoc_download import download_pandoc
-# download_pandoc()
+download_pandoc()
 
 prompts = [
     "Deploy an AWS EC2 instance.",
@@ -81,19 +81,22 @@ for i, prompt in enumerate(prompts):
         # (3) run tfsec on the terraform file
         result = subprocess.run(["tfsec", "tmp/", "-f", "json"], capture_output=True)
 
+        if debug:
+            print(str(result))
+
         # (4) extract tfsec descriptions from the csv output
         tfSecOutput = json.loads(result.stdout.decode("utf-8"))
 
         # (5) append to data list
         data.append({
-            "iteration": iteration + 1,
-            "prompt": prompt,
-            "response": response,
-            "tfsec": result.stdout.decode("utf-8"),
+            "iteration": str(iteration + 1),
+            "prompt": str(prompt),
+            "response": str(response),
+            "tfsec": str(result.stdout.decode("utf-8")),
         })
 
         # this is the new prompt
-        prompt = "I detect the following security vulnerabilities, can you fix them?\n"
+        prompt = "I detect the following security vulnerabilities, can you fix them in the previous code example and print it into one code block?\n"
 
         counter = 0
         for issue in tfSecOutput["results"]:
