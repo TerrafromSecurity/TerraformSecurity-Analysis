@@ -47,90 +47,147 @@ settings = " ".join(settingsPrompts)
 
 # generate tmp folder if it does not exist
 if not os.path.exists("tmp"):
+    print("create tmp folder")
     os.makedirs("tmp")
 
 # generate prompts and data folder if they do not exist
 if not os.path.exists("data/prompts"):
+    print("create prompts folder")
     os.makedirs("data/prompts")
 
-run_id = 0 # update this after each run
-for p in prompts:
-    print("#### Starting new prompt ####")
-    id, prompt = p.values()
-    data = []
-    # for the first question to chatgpt we add some settings
-    prompt = settings + "\n" + prompt
-    issues = 100000
-    iteration = 0
-    # use some high integer as an upper bound
-    number_results_previous_run = 10**10
-    while True:
-        if debug:
-            print(f"Prompt {id}: {prompt}")
+i = 0
+while True:
+    prompt = input("Please type in a description what your Terraform script should do or 'exit' if you want to quit:\n>")
+    if prompt == "exit":
+        break
+    solved = False
+
+    # save the number of the minimum achieved vulnerabilites and which try achieved this minimum
+    minVulnerabilities = 10 ** 10
+    tryMinVulnerabilites = 0
+
+    #try to generate save tf files 10 times
+    for tries in range(10):
+        previousIssues = []
+        solvedIssues = []
+        iteration = 0
+        # for the first question to chatgpt we add some settings
+        prompt = settings + "\n" + prompt
+        while True:
+            newIssues = []
+            data = []
+            if debug:
+                print(f"Prompt {i + 1}: {prompt}")
 
         # (1) Get first response and save to file
         print("Waiting for response ... ")
         response = bot.ask(prompt)
-        # response = "```\nterraform {\n  required_providers {\n    aws = {\n      source = \"hashicorp/aws\"\n    }\n  }\n}\n\nresource \"aws_instance\" \"example\" {\n  ami           = \"ami-0ff8a91507f77f867\"\n  instance_type = \"t2.micro\"\n\n  tags = {\n    Name = \"example\"\n  }\n}\n```\n"
         print("ChatGPT: \n", response)
         f = open("tmp/chatgpt.md", "w+")
         f.write(response)
         f.close()
 
-        if debug:
-            print(f"write response in tf file")
-        # (2) Extract code from markdown file and write to terraform file
-        code = "\n".join(extract_code(response))
-        f = open(f"tmp/chatgpt.tf", "w+")
-        f.write(code)
-        f.close()
+            if debug:
+                print(f"write response in tf file")
+            # (2) Extract code from markdown file and write to terraform file
+            code = "\n".join(extract_code(response))
+            if os.path.exists("tmp/chatgpt.tf"):
+                os.remove("tmp/chatgpt.tf")
+            f = open(f"tmp/chatgpt.tf", "w+")
+            f.write(code)
+            f.close()
 
-        if debug:
-            print(f"run tfsec")
-        # break
-        # (3) run tfsec on the terraform file
-        result = subprocess.run(["tfsec", "tmp/", "-f", "json"], capture_output=True)
+            if debug:
+                print(f"run tfsec")
+            # break
+            # (3) run tfsec on the terraform file
+            result = subprocess.run(["tfsec", f"tmp/", "-f", "json"], capture_output=True)
 
-        # (4) extract tfsec descriptions from the csv output
-        tfSecOutput = json.loads(result.stdout.decode("utf-8"))
+            # (4) extract tfsec descriptions from the csv output
+            tfSecOutput = json.loads(result.stdout.decode("utf-8"))
 
-        # (5) append to data list
-        data.append({
-            "iteration": iteration + 1,
-            "prompt": prompt,
-            "response": response,
-            "tfsec": result.stdout.decode("utf-8"),
-        })
+            # (5) append to data list
+            data.append({
+                "iteration": str(iteration + 1),
+                "prompt": str(prompt),
+                "response": str(response),
+                "tfsec": str(result.stdout.decode("utf-8")),
+            })
 
-        f = open(f"data/prompts/prompt_{id}_run_{run_id}_save_{iteration}.json", "w+")
-        f.write(json.dumps(data))
-        f.close()
+            # save all the data of this iteration to a json file
+            f = open(f"data/prompts/prompt_{i}_try_{tries}_save_{iteration}.json", "w+")
+            f.write(json.dumps(data))
+            f.close()
 
         # this is the new prompt
         prompt = "I detect the following security vulnerabilities, can you fix them?\n"
 
-        counter = 0
+            # check if there are no security issues left to fix
+            if tfSecOutput["results"] == None:
+                print("All issues have been solved")
+                f = open(f"data/prompts/prompt_{i}_CodeOfTry_{tries}.tf", "w+")
+                f.write(code)
+                f.close()
+                minVulnerabilities = 0
+                tryMinVulnerabilites = tries
+                solved = True
+                break
 
-        if len(tfSecOutput) == number_results_previous_run:
-            print("No new results")
+            # add the json object for each vulnerability to to prompt
+            for i, issue in enumerate(tfSecOutput["results"]):
+                prompt = prompt + "Vulnerablitity " + str(i) + ":\n"
+                prompt = prompt + str(issue) + "\n"
+                newIssues.append(tfSecOutput["results"][i]["rule_id"])
+
+            # check if the one of the issues that were already solved got reintroduced to the tf script
+            for issues in newIssues:
+                if solvedIssues.__contains__(issue):
+                    print("Previously solved issue occured again.")
+                    f = open(f"data/prompts/prompt_{i}_CodeOfTry_{tries}.tf", "w+")
+                    f.write(code)
+                    f.close()
+                    break
+
+            # check if one of the previous vulnerabilities was fixed and add them to the solved issues
+            solvedOneIssue = False
+            for issue in previousIssues:
+                if not newIssues.__contains__(issue):
+                    solvedOneIssue = True
+                    solvedIssues.append(issue)
+
+            # if there was no security issue fixed from the previous cancel this try
+            if not solvedOneIssue:
+                f = open(f"data/prompts/prompt_{i}_CodeOfTry_{tries}.tf", "w+")
+                f.write(code)
+                f.close()
+                break
+
+            print(f"Number of security issues: {len(newIssues)}")
+
+            iteration += 1
+
+        # end of while True
+
+        # if we solved all vulerabilities we can stop trying to generate code
+        if solved:
             break
-        number_results_previous_run = len(tfSecOutput)
-        print("Number of security issues: ", len(tfSecOutput))
 
-        for issue in tfSecOutput["results"]:
-            prompt = prompt + "Vulnerablitity " + str(counter) + ":\n"
-            prompt = prompt + "rule_description: " + issue['rule_description'] + "\n"
-            prompt = prompt + "impact: " + issue['impact'] + "\n"
-            prompt = prompt + "resolution: " + issue['resolution'] + "\n"
-            counter = counter + 1
-        
-        # the while loop stops once we got the same amout of issues or more then in the previous run
-        if (counter >= issues) or (counter == 0):
-            break
-        else:
-            issues = counter
+    # end of tries for loop
 
+    # if solved is True chatgpt managed to generate a save terraform file
+    if solved:
+        f = open("tmp/chatgpt.tf", "r")
+        lines = f.readlines()
+        print("This is the secure solution chatgpt generated for you.\n\n")
+        for line in lines:
+            print(line)
 
-    f = open(f"data/prompts/prompt_{id}_run_{run_id}.json", "w+")
-    f.write(json.dumps(data))
-    f.close()
+    # if solved is False chatgpt couln't resolve all vulnerabilities
+    else:
+        f = open(f"data/prompts/prompt_{i}_CodeOfTry_{tryMinVulnerabilites}.tf")
+        lines = f.readlines()
+        print(f"This is the best solution chatgpt could generate for you. It still has {minVulnerabilities} Vulnerabilities left.")
+        for line in lines:
+            print(line)
+
+    i += 1
