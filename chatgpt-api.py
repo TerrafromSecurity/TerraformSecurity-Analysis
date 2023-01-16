@@ -9,16 +9,19 @@ from pypandoc.pandoc_download import download_pandoc
 # download_pandoc()
 
 prompts = [
-    "Deploy an AWS EC2 instance.",
-    # "Can you create a VPC gateway instance with elastic IP on AWS?",
-    # "Can you create a S3 Bucket on AWS?",
-    # "Can you create an EC2 instance with a public IP on AWS?",
+    {"id": 1, "prompt": "CAn you deploy an AWS EC2 instance."},
+    {"id": 2, "prompt": "Can you create a VPC gateway instance with elastic IP on AWS?"},
+    {"id": 3, "prompt": "Can you create a S3 Bucket on AWS?"},
+    {"id": 4, "prompt": "Can you provision a t2.micro instance on AWS?"},
+    {"id": 5, "prompt": "Can you deploy a web server with a public IP on AWS?"},
+    {"id": 6, "prompt": "Can you change the AMI of an AWS EC2 instance to Ubuntu 16.04?"},
 ]
 
 settingsPrompts = [
     "Can you create terraform configuration code in the following?",
     "Don't forget the starting terraform block.",
     "Only print out a single code block per response.",
+    "Fill any placeholders with dummy values.",
     "The code should be generated based on the following description."
 ]
 
@@ -50,7 +53,10 @@ if not os.path.exists("tmp"):
 if not os.path.exists("data/prompts"):
     os.makedirs("data/prompts")
 
-for i, prompt in enumerate(prompts):
+run_id = 0 # update this after each run
+for p in prompts:
+    print("#### Starting new prompt ####")
+    id, prompt = p.values()
     data = []
     # for the first question to chatgpt we add some settings
     prompt = settings + "\n" + prompt
@@ -60,11 +66,12 @@ for i, prompt in enumerate(prompts):
     number_results_previous_run = 10**10
     while True:
         if debug:
-            print(f"Prompt {i + 1}: {prompt}")
+            print(f"Prompt {id}: {prompt}")
 
         # (1) Get first response and save to file
         print("Waiting for response ... ")
         response = bot.ask(prompt)
+        # response = "```\nterraform {\n  required_providers {\n    aws = {\n      source = \"hashicorp/aws\"\n    }\n  }\n}\n\nresource \"aws_instance\" \"example\" {\n  ami           = \"ami-0ff8a91507f77f867\"\n  instance_type = \"t2.micro\"\n\n  tags = {\n    Name = \"example\"\n  }\n}\n```\n"
         print("ChatGPT: \n", response)
         f = open("tmp/chatgpt.md", "w+")
         f.write(response)
@@ -95,7 +102,7 @@ for i, prompt in enumerate(prompts):
             "tfsec": result.stdout.decode("utf-8"),
         })
 
-        f = open(f"data/prompts/prompt_{i}_save_{iteration}.json", "w+")
+        f = open(f"data/prompts/prompt_{id}_run_{run_id}_save_{iteration}.json", "w+")
         f.write(json.dumps(data))
         f.close()
 
@@ -118,11 +125,12 @@ for i, prompt in enumerate(prompts):
             counter = counter + 1
         
         # the while loop stops once we got the same amout of issues or more then in the previous run
-        if counter >= issues | counter == 0:
+        if (counter >= issues) or (counter == 0):
             break
         else:
             issues = counter
 
-    f = open(f"data/prompts/prompt_{i}.json", "w+")
+
+    f = open(f"data/prompts/prompt_{id}_run_{run_id}.json", "w+")
     f.write(json.dumps(data))
     f.close()
