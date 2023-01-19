@@ -29,14 +29,14 @@ settingsPrompts = [
 # Check if directories exist
 def init():
     # generate tmp folder if it does not exist
-    if not os.path.exists("../tmp"):
+    if not os.path.exists("tmp"):
         print("create tmp folder")
-        os.makedirs("../tmp")
+        os.makedirs("tmp")
 
     # generate prompts and data folder if they do not exist
-    if not os.path.exists("../data/prompts"):
+    if not os.path.exists("prompts"):
         print("create prompts folder")
-        os.makedirs("../data/prompts")
+        os.makedirs("prompts")
 
 # Extract code from markdown
 def extract_code() -> list[str]:
@@ -47,7 +47,7 @@ def extract_code() -> list[str]:
     def prepare(doc):
         doc.code = []
 
-    data = pypandoc.convert_file('../tmp/chatgpt.md', 'json')
+    data = pypandoc.convert_file('tmp/chatgpt.md', 'json')
     doc = panflute.load(io.StringIO(data))
     doc = panflute.run_filter(action, prepare=prepare, doc=doc)
     return [code.text for code in doc.code]
@@ -58,7 +58,7 @@ def extract_code() -> list[str]:
 # - save the code block in a tf file
 # - return the code
 def parse_response(response: str) -> str:
-    f = open("../tmp/chatgpt.md", "w+")
+    f = open("tmp/chatgpt.md", "w+")
     f.write(response)
     f.close()
 
@@ -67,7 +67,7 @@ def parse_response(response: str) -> str:
 
     code = "\n".join(extract_code())
     if os.path.exists("tmp/chatgpt.tf"):
-        os.remove("../tmp/chatgpt.tf")
+        os.remove("tmp/chatgpt.tf")
     f = open(f"tmp/chatgpt.tf", "w+")
     f.write(code)
     f.close()
@@ -75,7 +75,7 @@ def parse_response(response: str) -> str:
     return code
 
 # Run tfSec on temporary data and output it as json
-def run_tfSec() -> str:
+def run_tfSec():
     if debug:
         print(f"run tfsec")
     output = subprocess.run(["tfsec", f"tmp/", "-f", "json"], capture_output=True)
@@ -83,19 +83,19 @@ def run_tfSec() -> str:
 
 # Analyse tfSec json output
 def analyse_tfSec_output(output):
-    number_of_issues = len(output["results"])
-    issues: set = output["results"]
-    return number_of_issues, issues
+    issues: set = set()
+    for issue in output["results"]:
+        issues.add(json.dumps(issue))
+    return len(issues), issues
 
 # Wrap up
-def finish(tries: int, code: str, data):
-    print("All issues have been solved")
+def finish(code: str, data):
     # save final TF file
-    f = open(f"data/prompts/prompt_{id}_final_{tries}.tf", "w+")
+    f = open(f"prompts/prompt_{id}_final.tf", "w+")
     f.write(code)
     f.close()
     # save final data
-    f = open(f"data/prompts/prompt_{id}_final_{tries}.json", "w+")
+    f = open(f"prompts/prompt_{id}.json", "w+")
     f.write(json.dumps(data))
     f.close()
 
@@ -109,10 +109,14 @@ def createPrompt(inputPrompt):
     prompt = settings + "\n" + prompt
 
     # (1) Get first response and save to file
-    print(f"### PROMPT: {prompt}")
-    print("Waiting for response ... ")
+    if debug:
+        print(f"### PROMPT: {prompt}")
+        print("Waiting for response ... ")
+
     response = bot.ask(prompt)
-    print("ChatGPT: \n", response)
+    
+    if debug:
+        print("ChatGPT: \n", response)
 
     # (2) Extract code from markdown file and write to terraform file
     code = parse_response(response)
@@ -122,40 +126,68 @@ def createPrompt(inputPrompt):
     tfSecOutput = run_tfSec()
 
     # (5) check if tfsec found any issues
-    number_of_issues, issues = analyse_tfSec_output(tfSecOutput)
-    tries = 0
+    number_of_issues, issuesToProcess = analyse_tfSec_output(tfSecOutput)
 
-    # (6) Run loop over all found issues and resolve issue by issue
-    while number_of_issues != 0:
-        rerun: bool = True
-        issue = issues.pop()
-        print("issue", issue)
-        resolved_issues: set = set()
-        resolved_issues.add(issue)
-        improvementPrompt = code + "\n" + "My code has the following security vulnerability. Can you fix this and " \
-                                          "print out the full code? " + issue
-        # Rerun the same request as long as the same issue persists in the code and no new issues have been introduced
-        while rerun:
-            imporvedResponse = bot.ask(improvementPrompt)
-            code = parse_response(imporvedResponse)
-            number_of_issues, issues = analyse_tfSec_output(run_tfSec())
-            if len(resolved_issues.intersection(issue)) == 0:
-                rerun = False
-
-        tries = tries + 1
-        data.append({
+    # Append initial prompt to data
+    data.append({
             "prompt": str(prompt),
-            "response": str(response),
+            "code": str(code),
             "tfsec": str(tfSecOutput),
             "number_of_issues": str(number_of_issues)
         })
 
-        # (5b) save all the data of this iteration to a json file
-        f = open(f"data/prompts/prompt_{id}_try_{tries}.json", "w+")
-        f.write(json.dumps(data))
-        f.close()
+    processed_issues: set = set()
+    resolved_issues: set = set()
+    # (6) Run loop over all found issues and resolve issue by issue
+    while True:
+        # if issues set is empty we have tried to resolve all issues that we found
+        if not issuesToProcess:
+            break
 
-    finish(tries, code, data)
+        resolved: bool = True
+        issue = issuesToProcess.pop()
+
+        if debug:
+            print("issue: " + issue)
+
+        jsonIssue = json.loads(issue)
+
+        processed_issues.add(jsonIssue["rule_id"])
+        prompt = code + "\n" + "My code has the following security vulnerability. Can you fix this and " \
+                                          "print out the full code? " + issue
+                                        
+        # Rerun the same request as long as the same issue persists in the code and no new issues have been introduced
+        for attempt in range(3):
+            response = bot.ask(prompt)
+            code = parse_response(response)
+            tfSecOutput = run_tfSec()
+            number_of_issues, issues = analyse_tfSec_output(tfSecOutput)
+            issueIds: set = set()
+            jsonIssues = json.loads(issues)
+            for i in issues:
+                issueIds.add(jsonIssues["rule_id"])
+            if len(issueIds.intersection(resolved_issues)) == 0 and jsonIssue["rule_id"] not in issueIds:
+                resolved = True
+                for newIssue in jsonIssues:
+                    if newIssue["rule_id"] not in processed_issues:
+                        issuesToProcess.add(newIssue["rule_id"])
+                break
+        
+        # if issue was resoleved add it to resolved issues
+        if resolved:
+            resolved = False
+            resolved_issues.add(issue["rule_id"])
+
+        data.append({
+            "prompt": str(prompt),
+            "code": str(code),
+            "tfsec": str(tfSecOutput),
+            "number_of_issues": str(number_of_issues)
+        })
+
+    # (5b) save all the data of this iteration to a json file
+
+    finish(code, data)
 
 
 
@@ -166,4 +198,3 @@ init()
 
 for p in prompts:
     createPrompt(p)
-
