@@ -1,35 +1,14 @@
-Here is the updated Terraform code that enables at-rest encryption for the block device of the EC2 instance:
+I apologize, it seems that I made a mistake on my previous response. The `metadata_options` block is not available for the `aws_instance` resource and the `http_token` is not an available option. The security vulnerability that you mentioned, "Instance does not require IMDS access to require a token" is related to the Instance Metadata Service (IMDS) that is available on all Amazon EC2 instances. This service provides information about the instance, such as the hostname, IAM role and security credentials, and IP addresses.
 
-```
-terraform {
-  required_providers {
-    aws = {
-      source = "hashicorp/aws"
-      version = "3.26.0"
-    }
-  }
-}
+To address this vulnerability, you will have to implement the following:
+- Use a firewall to block access to the IMDS endpoint (169.254.169.254)
+- Use the IAM Role and Instance Profile to limit access to the IMDS
+- Use the EC2 Parameter Store to store and retrieve the credentials
+- Use IAM Roles for Service Accounts to allow different applications to access different resources
+- Limit the permissions of the IAM Role associated with the instance
 
-provider "aws" {
-  region = "us-west-2"
-}
+You can also read more about the security best practices for IMDS at the following links:
+- https://aws.amazon.com/blogs/security/how-to-control-access-to-your-instance-metadata-service-imds-in-aws/
+- https://aws.amazon.com/premiumsupport/knowledge-center/iam-role-ec2-instance-metadata/
 
-resource "aws_instance" "example" {
-  ami           = "ami-0c94855ba95c71c99"
-  instance_type = "t2.micro"
-
-  root_block_device {
-    volume_type           = "gp2"
-    encrypted             = true
-    delete_on_termination = true
-  }
-
-  tags = {
-    Name = "example-instance"
-  }
-}
-```
-
-In this code, I added the `root_block_device` block, which enables encryption for the root block device of the EC2 instance. The `encrypted` field is set to `true`, which enables encryption. The `volume_type` and `delete_on_termination` fields are set to the default values.
-
-Please note that the `ami` value may not exist in your region, you need to specify a valid `ami` id for your region. Also replace the `region` value with the region you want to launch the instance in.
+Please let me know if you have any other questions.

@@ -140,6 +140,11 @@ def createPrompt(inputPrompt):
         # (5) check if tfsec found any issues
         number_of_issues, issuesToProcess = analyse_tfSec_output(tfSecOutput)
 
+        issuesToProcessIds: set = set()
+
+        for issue in issuesToProcess:
+            issuesToProcessIds.add(json.loads(issue)["rule_id"])
+
         # Append initial prompt to data
         data.append({
                 "prompt": str(prompt),
@@ -164,6 +169,7 @@ def createPrompt(inputPrompt):
             jsonIssue = json.loads(issue)
 
             processed_issues.add(jsonIssue["rule_id"])
+            issuesToProcessIds.remove(jsonIssue["rule_id"])
             prompt = code + "\n" + "My code has the following security vulnerability. Can you fix this and " \
                                             "print out the full code? " + issue
                                             
@@ -174,16 +180,17 @@ def createPrompt(inputPrompt):
                 tfSecOutputTmp = run_tfSec()
                 number_of_issues, issues = analyse_tfSec_output(tfSecOutput)
                 issueIds: set = set()
-                jsonIssues = json.loads(issues)
-                for i in issues:
-                    issueIds.add(i["rule_id"])
+                for newissue in tfSecOutputTmp["results"]:
+                    issueIds.add(newissue["rule_id"])
                 if len(issueIds.intersection(resolved_issues)) == 0 and jsonIssue["rule_id"] not in issueIds:
                     resolved_issues.add(jsonIssue["rule_id"])
                     tfSecOutput = tfSecOutputTmp
                     code = codeTmp
-                    for newIssue in jsonIssues:
-                        if newIssue["rule_id"] not in processed_issues:
-                            issuesToProcess.add(newIssue["rule_id"])
+                    for newIssue in tfSecOutputTmp["results"]:
+                        if newIssue["rule_id"] not in processed_issues and newIssue["rule_id"] not in issuesToProcessIds:
+                            #check if new issue rule id in issues to process
+                            issuesToProcess.add(newIssue)
+                            issuesToProcessIds.add(newIssue["rule_id"])
                     break
 
             data.append({
