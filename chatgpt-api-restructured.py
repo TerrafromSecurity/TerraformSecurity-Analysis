@@ -17,9 +17,9 @@ prompts = [
     # {"id": 5, "prompt": "Can you deploy a web server with a public IP on AWS?"},
     # {"id": 6, "prompt": "Can you change the AMI of an AWS EC2 instance to Ubuntu 16.04?"},
     # bucket_bucket_object
-     {"id": 7, "prompt": "Provider Block with region us-east-1. Create S3 Bucket Resource. Set bucket to cookie. Resource, aws s3 bucket object. Set key to index.html and use the s3 bucket id."},
+    # {"id": 7, "prompt": "Provider Block with region us-east-1. Create S3 Bucket Resource. Set bucket to cookie. Resource, aws s3 bucket object. Set key to index.html and use the s3 bucket id."},
     # data_ami-instance
-    # {"id": 8, "prompt": "Provider AWS block with region set to us-east-1. data block: Get latest AMI ID for Amazon Linux2 OS. Create AWS instance with data ami id and t2.micro"},
+     {"id": 8, "prompt": "Provider AWS block with region set to us-east-1. data block: Get latest AMI ID for Amazon Linux2 OS. Create AWS instance with data ami id and t2.micro"},
     #instance-output-dns
     # {"id": 9, "prompt": "Provider AWS block with region us east. Create EC2 Instance with ami-0ff8a91507f77f867 and t2.micro. Output block, create public DNS URL from vm."},
     # random_pet-bucket
@@ -106,10 +106,10 @@ def runTfSec():
     result = subprocess.run(["tfsec", f"tmp/", "-f", "json"], capture_output=True)
 
     # check if tfsec executed without errors
-    if result.returncode != 0:
-        tfSecOutput = "error"
-    else:
+    try:
         tfSecOutput = json.loads(result.stdout.decode("utf-8"))
+    except:
+        tfSecOutput = "error"
 
     return tfSecOutput
 
@@ -177,7 +177,10 @@ def computePrompt(p):
             break
 
         # stores number of vulnerabilities found in tf file
-        number_of_issues = len(tfSecOutput["results"])
+        if tfSecOutput["results"] == None:
+            number_of_issues = 0
+        else:
+            number_of_issues = len(tfSecOutput["results"])
 
         if debug:
             print(f"Detected {number_of_issues} issues")
