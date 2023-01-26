@@ -220,7 +220,12 @@ def computePrompt(p):
 
 debug = True
 bot = ChatGPT()
-initFolders()
 
-for p in prompts:
-    computePrompt(p)
+response = bot.ask("Hello")
+if not (response == 'Your ChatGPT session is not usable.\n* Run this program with the `install` parameter and log in to ChatGPT.\n* If you think you are already logged in, try running the `session` command.'):
+    initFolders()
+
+    for p in prompts:
+        computePrompt(p)
+else:
+    print("ChatGPT is not working")
