@@ -104,7 +104,7 @@ def getResponse(prompt: str):
 def runTfSec():
     # Run tfsec on the current tf file in the tmp folder
     result = subprocess.run(["tfsec", f"tmp/", "-f", "json"], capture_output=True)
-
+    
     # check if tfsec executed without errors
     try:
         tfSecOutput = json.loads(result.stdout.decode("utf-8"))
