@@ -11,9 +11,9 @@ from pypandoc.pandoc_download import download_pandoc
 # Here are all the different prompts we tested
 prompts = [
     # {"id": 1, "prompt": "Can you deploy an AWS EC2 instance."},
-     {"id": 2, "prompt": "Can you create a VPC gateway instance with elastic IP on AWS?"},
+    # {"id": 2, "prompt": "Can you create a VPC gateway instance with elastic IP on AWS?"},
     # {"id": 3, "prompt": "Can you create a S3 Bucket on AWS?"},
-    # {"id": 4, "prompt": "Can you provision a t2.micro instance on AWS?"},
+      {"id": 4, "prompt": "Can you provision a t2.micro instance on AWS?"},
     # {"id": 5, "prompt": "Can you deploy a web server with a public IP on AWS?"},
     # {"id": 6, "prompt": "Can you change the AMI of an AWS EC2 instance to Ubuntu 16.04?"},
     # bucket_bucket_object
