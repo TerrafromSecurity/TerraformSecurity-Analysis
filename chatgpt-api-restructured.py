@@ -14,12 +14,12 @@ prompts = [
     # {"id": 2, "prompt": "Can you create a VPC gateway instance with elastic IP on AWS?"},
     # {"id": 3, "prompt": "Can you create a S3 Bucket on AWS?"},
     # {"id": 4, "prompt": "Can you provision a t2.micro instance on AWS?"},
-    # {"id": 5, "prompt": "Can you deploy a web server with a public IP on AWS?"},
+     {"id": 5, "prompt": "Can you deploy a web server with a public IP on AWS?"},
     # {"id": 6, "prompt": "Can you change the AMI of an AWS EC2 instance to Ubuntu 16.04?"},
     # bucket_bucket_object
     # {"id": 7, "prompt": "Provider Block with region us-east-1. Create S3 Bucket Resource. Set bucket to cookie. Resource, aws s3 bucket object. Set key to index.html and use the s3 bucket id."},
     # data_ami-instance
-     {"id": 8, "prompt": "Provider AWS block with region set to us-east-1. data block: Get latest AMI ID for Amazon Linux2 OS. Create AWS instance with data ami id and t2.micro"},
+    # {"id": 8, "prompt": "Provider AWS block with region set to us-east-1. data block: Get latest AMI ID for Amazon Linux2 OS. Create AWS instance with data ami id and t2.micro"},
     #instance-output-dns
     # {"id": 9, "prompt": "Provider AWS block with region us east. Create EC2 Instance with ami-0ff8a91507f77f867 and t2.micro. Output block, create public DNS URL from vm."},
     # random_pet-bucket
@@ -104,7 +104,7 @@ def getResponse(prompt: str):
 def runTfSec():
     # Run tfsec on the current tf file in the tmp folder
     result = subprocess.run(["tfsec", f"tmp/", "-f", "json"], capture_output=True)
-
+    
     # check if tfsec executed without errors
     try:
         tfSecOutput = json.loads(result.stdout.decode("utf-8"))
@@ -131,6 +131,7 @@ def computePrompt(p):
     
     # this list saves the prompt and outputs made in the process
     data = []
+    stopped = False
 
     for attempt in range(5):
         # get the code from the current prompt
@@ -155,6 +156,7 @@ def computePrompt(p):
             })
 
             finish(code, data, attempt, id)
+            stopped = True
             break
 
 
@@ -174,6 +176,7 @@ def computePrompt(p):
             })
 
             finish(code, data, attempt, id)
+            stopped = True
             break
 
         # stores number of vulnerabilities found in tf file
@@ -199,6 +202,7 @@ def computePrompt(p):
                 print("All vulnerabilities have been resolved.")
 
             finish(code, data, attempt, id)
+            stopped = True
             break
         
         # else we continue trying to fix the remaining issues
@@ -216,6 +220,11 @@ def computePrompt(p):
             f = open(f"data/prompts/prompt_{id}_try_{attempt}.json", "w+")
             f.write(json.dumps(data))
             f.close()
+    
+    if not stopped:
+        f = open(f"data/prompts/prompt_{id}_final_{attempt}.tf", "w+")
+        f.write(code)
+        f.close()
 
 
 debug = True
