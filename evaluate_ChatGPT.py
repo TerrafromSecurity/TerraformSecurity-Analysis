@@ -52,54 +52,55 @@ def remove_identifiers(txt_file):
 
 
 def pass1(basepath, n_samples):
-    out_txt = open(f'{basepath}/FunctionalityTestChatGPT.txt', 'w+', encoding='utf-8', errors='ignore')
+    out_txt = open(f'{basepath}/FunctionalityTestChatGPTOhneDataAmi.txt', 'w+', encoding='utf-8', errors='ignore')
     out_txt.write('Task | Success rate | Errors | Distribution\n')
     total_success_rate = []
     task_names = []
     for task in sorted(os.listdir(f'{basepath}/human-tf')):
-        task_names.append(task)
-        #n_samples = len(os.listdir(f'data/{provider}/{model}-tf/{task}'))
-        # find the number of duplicates
-        i = 0
-        sample_to_int = {}
-        distr = [0]*n_samples
-        for sample in sorted(os.listdir(f'{basepath}/ChatGPT-tf/{task}')):
-            sample_to_int[sample]=i
-            if not os.path.exists(f'{basepath}/ChatGPT-tf/{task}/{sample}/plan.json'):
-                try:
-                    duplicate = os.listdir(f'{basepath}/ChatGPT-tf/{task}/{sample}')[0]
-                    distr[sample_to_int[duplicate[:-4]]]+=1
-                except:
-                    print(f'{basepath}/ChatGPT-tf/{task}/{sample}')
-                    shutil.rmtree(f'{basepath}/ChatGPT-tf/{task}/{sample}')
-                    sys.exit(f'{basepath}/ChatGPT-tf/{task}/{sample}')
-            else:
-                distr[i] +=1
-            i+=1
-            if i == n_samples:
-                break
-        # calculate success rate on tasks
-        i == 0
-        errors = []
-        human_file = open(f'{basepath}/human-tf/{task}/plan.json', 'r', encoding='utf-8', errors='ignore')
-        human_json = human_file.read()
-        human_json = clean_json(human_json)
-        success_rate=[0]*n_samples
-        for sample in sorted(os.listdir(f'{basepath}/ChatGPT-tf/{task}')):
-            if os.path.exists(f'{basepath}/ChatGPT-tf/{task}/{sample}/plan.json'):
-                model_file = open(f'{basepath}/ChatGPT-tf/{task}/{sample}/plan.json', 'r', encoding='utf-8', errors='ignore')
-                model_json = model_file.read()
-                model_json = clean_json(model_json)
-                if model_json == human_json:
-                    success_rate[sample_to_int[sample]] = distr[sample_to_int[sample]]
-                else: 
-                    errors.append(int(sample[7:]))
-            i += 1
-            if i == n_samples:
-                break
+        if task != "data_ami" and task != "data_ami-instance":
+            task_names.append(task)
+            #n_samples = len(os.listdir(f'data/{provider}/{model}-tf/{task}'))
+            # find the number of duplicates
+            i = 0
+            sample_to_int = {}
+            distr = [0]*n_samples
+            for sample in sorted(os.listdir(f'{basepath}/ChatGPT-tf/{task}')):
+                sample_to_int[sample]=i
+                if not os.path.exists(f'{basepath}/ChatGPT-tf/{task}/{sample}/plan.json'):
+                    try:
+                        duplicate = os.listdir(f'{basepath}/ChatGPT-tf/{task}/{sample}')[0]
+                        distr[sample_to_int[duplicate[:-4]]]+=1
+                    except:
+                        print(f'{basepath}/ChatGPT-tf/{task}/{sample}')
+                        shutil.rmtree(f'{basepath}/ChatGPT-tf/{task}/{sample}')
+                        sys.exit(f'{basepath}/ChatGPT-tf/{task}/{sample}')
+                else:
+                    distr[i] +=1
+                i+=1
+                if i == n_samples:
+                    break
+            # calculate success rate on tasks
+            i == 0
+            errors = []
+            human_file = open(f'{basepath}/human-tf/{task}/plan.json', 'r', encoding='utf-8', errors='ignore')
+            human_json = human_file.read()
+            human_json = clean_json(human_json)
+            success_rate=[0]*n_samples
+            for sample in sorted(os.listdir(f'{basepath}/ChatGPT-tf/{task}')):
+                if os.path.exists(f'{basepath}/ChatGPT-tf/{task}/{sample}/plan.json'):
+                    model_file = open(f'{basepath}/ChatGPT-tf/{task}/{sample}/plan.json', 'r', encoding='utf-8', errors='ignore')
+                    model_json = model_file.read()
+                    model_json = clean_json(model_json)
+                    if model_json == human_json:
+                        success_rate[sample_to_int[sample]] = distr[sample_to_int[sample]]
+                    else: 
+                        errors.append(int(sample[7:]))
+                i += 1
+                if i == n_samples:
+                    break
 
-        total_success_rate.append(np.mean(success_rate))
-        out_txt.write(f'{task} | {np.mean(success_rate)*100}% | {sorted(errors)} | {distr}\n')
+            total_success_rate.append(np.mean(success_rate))
+            out_txt.write(f'{task} | {np.mean(success_rate)*100}% | {sorted(errors)} | {distr}\n')
     out_txt.write(f'Average success rate {np.mean(total_success_rate)*100}%\n')
 
 def clean_json(input):
@@ -116,30 +117,29 @@ def clean_json(input):
 def make_json_model(basepath):
     print(f'------------------------------------\nChatGPT')
     for task in sorted(os.listdir(f"{basepath}/ChatGPT-txt")):
-        if task == "instance":
-            print(task)
-            hash_to_sample = {}
-            
-            tf_path = f'{basepath}/ChatGPT-tf/{task}'
-            if not os.path.exists(tf_path): 
-                os.makedirs(tf_path)
+        print(task)
+        hash_to_sample = {}
+        
+        tf_path = f'{basepath}/ChatGPT-tf/{task}'
+        if not os.path.exists(tf_path): 
+            os.makedirs(tf_path)
 
-            for sample_txt in sorted(os.listdir(f'{basepath}/ChatGPT-txt/{task}')):
-                sample = sample_txt[:-4]
-                if not os.path.exists(f'{tf_path}/{sample}'):
-                    os.makedirs(f'{tf_path}/{sample}')
-                    clean_txt = remove_identifiers(f'{basepath}/ChatGPT-txt/{task}/{sample_txt}',)
-                    
-                    if hash(clean_txt) not in hash_to_sample:
-                        hash_to_sample[hash(clean_txt)] = sample
-                        tf_file = open( f'{tf_path}/{sample}/main.tf', 'w', encoding='utf-8', errors='ignore')
-                        tf_file.write(clean_txt)
-                        tf_file.close()
-                        make_plan(f'{tf_path}/{sample}')
-                    else:
-                        duplicate = hash_to_sample[hash(clean_txt)]
-                        tf_file = open(f'{tf_path}/{sample}/{duplicate}.txt', 'w', encoding='utf-8', errors='ignore')
-                        tf_file.close()
+        for sample_txt in sorted(os.listdir(f'{basepath}/ChatGPT-txt/{task}')):
+            sample = sample_txt[:-4]
+            if not os.path.exists(f'{tf_path}/{sample}'):
+                os.makedirs(f'{tf_path}/{sample}')
+                clean_txt = remove_identifiers(f'{basepath}/ChatGPT-txt/{task}/{sample_txt}',)
+                
+                if hash(clean_txt) not in hash_to_sample:
+                    hash_to_sample[hash(clean_txt)] = sample
+                    tf_file = open( f'{tf_path}/{sample}/main.tf', 'w', encoding='utf-8', errors='ignore')
+                    tf_file.write(clean_txt)
+                    tf_file.close()
+                    make_plan(f'{tf_path}/{sample}')
+                else:
+                    duplicate = hash_to_sample[hash(clean_txt)]
+                    tf_file = open(f'{tf_path}/{sample}/{duplicate}.txt', 'w', encoding='utf-8', errors='ignore')
+                    tf_file.close()
 
 def make_json_human(basepath):
     print('------------------------------------\nhuman')
