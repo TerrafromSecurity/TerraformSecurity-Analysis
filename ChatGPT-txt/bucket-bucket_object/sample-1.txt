@@ -20,4 +20,5 @@ resource "aws_s3_bucket" "cookie" {
 resource "aws_s3_bucket_object" "index" {
   bucket = aws_s3_bucket.cookie.id
   key    = "index.html"
+  source = "path/to/index.html"
 }

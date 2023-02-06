@@ -1,3 +1,10 @@
+terraform {
+	required_providers {
+		aws = {
+			source  = "hashicorp/aws"
+		}
+	}
+}
 # Terraform block with the AWS provider
 provider "aws" {
 

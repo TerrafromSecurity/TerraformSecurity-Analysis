@@ -13,16 +13,17 @@ provider "aws" {
 
 # Create Security Group called vpc-ssh. It allows port 22 ingress and all ports and ip egress
 resource "aws_security_group" "vpc-ssh" {
-  name        = "vpc-ssh"
-  description = "Allow SSH access on port 22 and all egress traffic"
+  name = "vpc-ssh"
 
+  # Allow ingress on port 22
   ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
+    from_port = 22
+    to_port   = 22
+    protocol  = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # Allow egress on all ports and IPs
   egress {
     from_port   = 0
     to_port     = 0

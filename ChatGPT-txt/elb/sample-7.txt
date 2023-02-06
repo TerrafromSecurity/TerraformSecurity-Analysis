@@ -13,11 +13,8 @@ provider "aws" {
 
 # Resource, create AWS ELB that listens for instance port 80 and lb port 80
 resource "aws_elb" "example" {
-  # Other configuration options here
-
   listener {
     instance_port = 80
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port       = 80
   }
 }

@@ -16,8 +16,7 @@ resource "aws_instance" "example" {
   ami           = "ami-0915bcb5fa77e4892"
   instance_type = "t2.micro"
 
-  # Ignore changes to the instance's tags
-  lifecycle {
-    ignore_changes = ["tags"]
+  tags = {
+    Name = "example"
   }
 }

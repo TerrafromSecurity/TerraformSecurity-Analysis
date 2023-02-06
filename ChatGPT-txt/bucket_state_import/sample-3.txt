@@ -8,12 +8,11 @@ terraform {
 
 # Provider Block AWS with region us east
 provider "aws" {
-  region = "us-east"
+  region = "us-east-1"
 }
 
-
 # Resource, create s3 bucket. Set bucket to state-import-bucket and force destroy false
-resource "aws_s3_bucket" "state-import-bucket" {
+resource "aws_s3_bucket" "state_import" {
   bucket = "state-import-bucket"
   force_destroy = false
 }

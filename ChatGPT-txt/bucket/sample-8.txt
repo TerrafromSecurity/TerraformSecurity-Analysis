@@ -12,10 +12,6 @@ provider "aws" {
 }
 
 # Create S3 Bucket, set bucket to  "icecream"
-provider "aws" {
-  region = "us-east-1"
-}
-
 resource "aws_s3_bucket" "icecream" {
   bucket = "icecream"
 }

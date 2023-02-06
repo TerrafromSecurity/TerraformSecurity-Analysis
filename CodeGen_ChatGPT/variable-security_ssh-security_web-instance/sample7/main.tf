@@ -1,3 +1,10 @@
+terraform {
+	required_providers {
+		aws = {
+			source  = "hashicorp/aws"
+		}
+	}
+}
 # Provider Block AWS in region var.aws_region and default profile
 provider "aws" {
   region = var.aws_region

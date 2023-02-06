@@ -1,6 +1,13 @@
+terraform {
+	required_providers {
+		aws = {
+			source  = "hashicorp/aws"
+		}
+	}
+}
 # Provider Block AWS in region var.aws_region and default profile
 provider "aws" {
-  region = var.aws_region
+  region  = var.aws_region
   profile = "default"
 }
 
@@ -29,12 +36,11 @@ variable "ec2_instance_type" {
 }
 
 # Create Security Group for SSH Traffic, allow port 22 ingress and all IP and ports egress
-resource "aws_security_group" "ssh" {
-  name        = "ssh"
-  description = "Allow SSH traffic on port 22"
+resource "aws_security_group" "ssh_traffic" {
+  name        = "ssh_traffic_security_group"
+  description = "Security group for SSH traffic"
 
   ingress {
-    description = "SSH traffic"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
@@ -49,9 +55,8 @@ resource "aws_security_group" "ssh" {
   }
 }
 
-# Create Security Group for web traffic, allow port 80 and 443 ingress and all outbound traffic
 resource "aws_security_group" "web_traffic" {
-  name        = "web-traffic"
+  name        = "web_traffic"
   description = "Security group for web traffic"
 
   ingress {
@@ -77,29 +82,32 @@ resource "aws_security_group" "web_traffic" {
 }
 
 # Create EC2 Instance with variable ec2 ami and instance type. Use vpc shh and vpc web security group ids
-
 variable "ec2_ami" {
-  type = string
+  type        = string
+  description = "The AMI ID to use for the EC2 instance"
 }
 
-variable "ec2_instance_type" {
-  type = string
+variable "instance_type" {
+  type        = string
+  description = "The instance type to use for the EC2 instance"
 }
 
 variable "vpc_ssh_security_group_id" {
-  type = string
+  type        = string
+  description = "The ID of the VPC SSH security group"
 }
 
 variable "vpc_web_security_group_id" {
-  type = string
+  type        = string
+  description = "The ID of the VPC web security group"
 }
 
 resource "aws_instance" "ec2_instance" {
   ami           = var.ec2_ami
-  instance_type = var.ec2_instance_type
+  instance_type = var.instance_type
 
-  vpc_security_group_ids = [
+  security_groups = [
     var.vpc_ssh_security_group_id,
-    var.vpc_web_security_group_id,
+    var.vpc_web_security_group_id
   ]
 }

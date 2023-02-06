@@ -21,12 +21,17 @@ resource "aws_instance" "example" {
 }
 
 # Time sleep resource block, Wait for 90 seconds after creating ec2 instance
-resource "aws_cloudwatch_event_rule" "wait_for_ec2" {
-  schedule_expression = "rate(90 seconds)"
+resource "aws_instance" "example" {
+  ami           = "ami-0ff8a91507f77f867"
+  instance_type = "t2.micro"
 }
 
-resource "aws_cloudwatch_event_target" "wait_for_ec2" {
-  rule = "${aws_cloudwatch_event_rule.wait_for_ec2.name}"
-  target_id = "wait_for_ec2_target"
-  arn = "arn:aws:lambda:us-east-1:123456789012:function:wait_for_ec2"
+resource "null_resource" "sleep" {
+  triggers = {
+    instance_id = aws_instance.example.id
+  }
+
+  provisioner "local-exec" {
+    command = "sleep 90"
+  }
 }

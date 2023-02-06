@@ -1,3 +1,10 @@
+terraform {
+	required_providers {
+		aws = {
+			source  = "hashicorp/aws"
+		}
+	}
+}
 # Provider Block AWS in region var.aws_region and default profile
 provider "aws" {
   region = var.aws_region
@@ -28,11 +35,12 @@ variable "ec2_instance_type" {
   type    = string
 }
 
-# Create Security Group for SSH Traffic, allow port 22 ingress and all IP and ports egress
+# Create Security Group for SSH Traffic
 resource "aws_security_group" "ssh_traffic" {
-  name   = "ssh_traffic"
-  description = "Allow SSH traffic on port 22"
+  name        = "ssh_traffic"
+  description = "Allow SSH traffic"
 
+  # Allow port 22 ingress
   ingress {
     from_port   = 22
     to_port     = 22
@@ -40,6 +48,7 @@ resource "aws_security_group" "ssh_traffic" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # Allow all IPs and ports egress
   egress {
     from_port   = 0
     to_port     = 0
@@ -48,27 +57,21 @@ resource "aws_security_group" "ssh_traffic" {
   }
 }
 
-# Create Security Group for web traffic
+# Create Security Group for web traffic, allow port 80 and 443 ingress and all outbound traffic
 resource "aws_security_group" "web" {
-  name        = "web-sg"
+  name        = "web_traffic"
   description = "Security group for web traffic"
 
-  # Allow port 80 and 443 ingress
   ingress {
+    description = "Allow traffic on ports 80 and 443"
     from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  ingress {
-    from_port   = 443
     to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Allow all outbound traffic
   egress {
+    description = "Allow all outbound traffic"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -76,29 +79,13 @@ resource "aws_security_group" "web" {
   }
 }
 
-# Create EC2 Instance with variable ec2 ami and instance type. Use vpc ssh and vpc web security group ids
-variable "ec2_ami" {
-  type = string
-}
-
-variable "instance_type" {
-  type = string
-}
-
-variable "vpc_ssh_security_group_id" {
-  type = string
-}
-
-variable "vpc_web_security_group_id" {
-  type = string
-}
-
-resource "aws_instance" "ec2_instance" {
+# Create EC2 Instance with variable ec2 ami and instance type. Use vpc shh and vpc web security group ids
+resource "aws_instance" "web_server" {
   ami           = var.ec2_ami
   instance_type = var.instance_type
 
-  security_groups = [
+  vpc_security_group_ids = [
     var.vpc_ssh_security_group_id,
-    var.vpc_web_security_group_id,
+    var.vpc_web_security_group_id
   ]
 }

@@ -1,3 +1,10 @@
+terraform {
+	required_providers {
+		aws = {
+			source  = "hashicorp/aws"
+		}
+	}
+}
 # Provider Block AWS in region var.aws_region and default profile
 provider "aws" {
   region  = var.aws_region
@@ -30,10 +37,10 @@ variable "ec2_instance_type" {
 
 # Create Security Group for SSH Traffic
 resource "aws_security_group" "ssh" {
-  name        = "ssh-traffic"
+  name        = "ssh_traffic"
   description = "Allow SSH traffic on port 22"
 
-  # Allow SSH traffic on port 22
+  # Allow ingress on port 22
   ingress {
     from_port   = 22
     to_port     = 22
@@ -41,7 +48,7 @@ resource "aws_security_group" "ssh" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Allow all IPs and ports for egress
+  # Allow all egress traffic
   egress {
     from_port   = 0
     to_port     = 0
@@ -52,8 +59,8 @@ resource "aws_security_group" "ssh" {
 
 # Create Security Group for web traffic, allow port 80 and 443 ingress and all outbound traffic
 resource "aws_security_group" "web_traffic" {
-  name        = "web_traffic"
-  description = "Security group for web traffic"
+  name        = "web_traffic_security_group"
+  description = "Allow incoming traffic on port 80 and 443 and allow all outbound traffic"
 
   ingress {
     from_port   = 80
@@ -77,9 +84,15 @@ resource "aws_security_group" "web_traffic" {
   }
 }
 
-# Create EC2 Instance with variable ec2 ami and instance type. Use vpc shh and vpc web security group ids
+# Create EC2 Instance with variable ec2 ami and instance type. Use vpc ssh and vpc web security group ids
 resource "aws_instance" "ec2_instance" {
   ami           = var.ec2_ami
   instance_type = var.instance_type
-  vpc_security_group_ids = [var.vpc_ssh_security_group_id, var.vpc_web_security_group_id]
+
+  vpc_security_group_ids = [
+    var.vpc_ssh_security_group_id,
+    var.vpc_web_security_group_id
+  ]
+
+  key_name = var.key_name
 }

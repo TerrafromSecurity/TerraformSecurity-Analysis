@@ -8,14 +8,14 @@ terraform {
 
 # Provider block with AWS in us-east-1 region and profile set as default
 provider "aws" {
-  region  = "us-east-1"
+  region = "us-east-1"
   profile = "default"
 }
 
 # Provider block with AWS in us-west-1 region, profile set as default and alias aws-west-1
 provider "aws" {
-  alias   = "aws-west-1"
-  region  = "us-west-1"
+  alias  = "aws-west-1"
+  region = "us-west-1"
   profile = "default"
 }
 

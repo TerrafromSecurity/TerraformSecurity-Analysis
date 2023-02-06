@@ -12,18 +12,18 @@ provider "aws" {
 }
 
 # Create AWS IAM user resource for each TJack, TJames, TMadhu and TDave
-resource "aws_iam_user" "tjack" {
+resource "aws_iam_user" "TJack" {
   name = "TJack"
 }
 
-resource "aws_iam_user" "tjames" {
+resource "aws_iam_user" "TJames" {
   name = "TJames"
 }
 
-resource "aws_iam_user" "tmadhu" {
+resource "aws_iam_user" "TMadhu" {
   name = "TMadhu"
 }
 
-resource "aws_iam_user" "tdave" {
+resource "aws_iam_user" "TDave" {
   name = "TDave"
 }

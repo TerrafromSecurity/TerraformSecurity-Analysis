@@ -1,3 +1,10 @@
+terraform {
+	required_providers {
+		aws = {
+			source  = "hashicorp/aws"
+		}
+	}
+}
 # Provider AWS in region var.aws_region
 provider "aws" {
   region = var.aws_region

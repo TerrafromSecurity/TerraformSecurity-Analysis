@@ -13,16 +13,22 @@ provider "aws" {
 }
 
 # Create EC2 Instance with ami-0ff8a91507f77f867 instance type t2.micro. Connection Block for ssh with the public ip
-resource "aws_instance" "example" {
-  ami           = "ami-0ff8a91507f77f867"
-  instance_type = "t2.micro"
-}
+resource "aws_security_group" "allow_ssh" {
+  name        = "allow_ssh"
+  description = "Allow SSH access"
+  vpc_id      = aws_instance.example.vpc_id
 
-# Connection block for ssh with the public IP
-resource "aws_eip" "example" {
-  instance = aws_instance.example.id
-}
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [aws_instance.example.public_ip]
+  }
 
-output "public_ip" {
-  value = aws_eip.example.public_ip
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }

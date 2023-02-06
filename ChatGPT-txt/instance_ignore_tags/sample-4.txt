@@ -12,11 +12,12 @@ provider "aws" {
 }
 
 # Create EC2 Instance with ami-0915bcb5fa77e4892 and instance type t2.micro. Ignore changes to tags
-resource "aws_instance" "example" {
+resource "aws_instance" "my_instance" {
   ami           = "ami-0915bcb5fa77e4892"
   instance_type = "t2.micro"
 
-  tags = {
-    // You can add tags here if you want, but the prompt said to ignore changes to tags
+  # Ignore changes to the tags attribute
+  lifecycle {
+    ignore_changes = ["tags"]
   }
 }

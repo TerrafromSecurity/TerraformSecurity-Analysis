@@ -15,6 +15,7 @@ provider "aws" {
 resource "aws_security_group" "vpc-ssh" {
   name = "vpc-ssh"
 
+  # Allow incoming SSH traffic
   ingress {
     from_port = 22
     to_port = 22
@@ -22,6 +23,7 @@ resource "aws_security_group" "vpc-ssh" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # Allow all outbound traffic
   egress {
     from_port = 0
     to_port = 0

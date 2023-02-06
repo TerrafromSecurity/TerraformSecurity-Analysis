@@ -13,7 +13,7 @@ provider "aws" {
 
 # Create Security Group that allows port 80, 443 inbound and all ports outbound
 resource "aws_security_group" "web" {
-  name        = "web-security-group"
+  name        = "web-sg"
   description = "Security group for web servers"
 
   ingress {

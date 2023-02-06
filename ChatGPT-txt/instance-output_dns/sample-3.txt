@@ -8,7 +8,7 @@ terraform {
 
 # Provider AWS block with region us east
 provider "aws" {
-  region = "us-east"
+  region = "us-east-1"
 }
 
 # Create EC2 Instance with ami-0ff8a91507f77f867 and t2.micro
@@ -18,6 +18,6 @@ resource "aws_instance" "example" {
 }
 
 # Output block, create public DNS URL from vm
-output "instance_public_dns" {
+output "public_dns" {
   value = aws_instance.example.public_dns
 }

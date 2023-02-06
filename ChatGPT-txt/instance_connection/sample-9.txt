@@ -16,12 +16,12 @@ provider "aws" {
 resource "aws_instance" "example" {
   ami           = "ami-0ff8a91507f77f867"
   instance_type = "t2.micro"
-
-  # Connection block for SSH access using the instance's public IP address
+  
+  # Connection block for ssh access using the instance's public IP address
   connection {
-    type        = "ssh"
-    host        = self.public_ip
-    user        = "ec2-user"
+    type     = "ssh"
+    host     = self.public_ip
+    user     = "ec2-user"
     private_key = file("~/.ssh/id_rsa")
   }
 }

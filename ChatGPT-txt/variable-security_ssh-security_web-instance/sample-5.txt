@@ -1,6 +1,13 @@
+terraform {
+	required_providers {
+		aws = {
+			source  = "hashicorp/aws"
+		}
+	}
+}
 # Provider Block AWS in region var.aws_region and default profile
 provider "aws" {
-  region  = var.aws_region
+  region = var.aws_region
   profile = "default"
 }
 
@@ -30,8 +37,8 @@ variable "ec2_instance_type" {
 
 # Create Security Group for SSH Traffic, allow port 22 ingress and all IP and ports egress
 resource "aws_security_group" "ssh_traffic" {
-  name        = "ssh_traffic_security_group"
-  description = "Security group for SSH traffic"
+  name   = "ssh_traffic"
+  description = "Allow SSH traffic on port 22"
 
   ingress {
     from_port   = 22
@@ -48,17 +55,18 @@ resource "aws_security_group" "ssh_traffic" {
   }
 }
 
-resource "aws_security_group" "web_traffic" {
-  name        = "web_traffic"
+# Create Security Group for web traffic
+resource "aws_security_group" "web" {
+  name        = "web-sg"
   description = "Security group for web traffic"
 
+  # Allow port 80 and 443 ingress
   ingress {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
   ingress {
     from_port   = 443
     to_port     = 443
@@ -66,6 +74,7 @@ resource "aws_security_group" "web_traffic" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # Allow all outbound traffic
   egress {
     from_port   = 0
     to_port     = 0
@@ -74,25 +83,21 @@ resource "aws_security_group" "web_traffic" {
   }
 }
 
-# Create EC2 Instance with variable ec2 ami and instance type. Use vpc shh and vpc web security group ids
+# Create EC2 Instance with variable ec2 ami and instance type. Use vpc ssh and vpc web security group ids
 variable "ec2_ami" {
-  type        = string
-  description = "The AMI ID to use for the EC2 instance"
+  type = string
 }
 
 variable "instance_type" {
-  type        = string
-  description = "The instance type to use for the EC2 instance"
+  type = string
 }
 
 variable "vpc_ssh_security_group_id" {
-  type        = string
-  description = "The ID of the VPC SSH security group"
+  type = string
 }
 
 variable "vpc_web_security_group_id" {
-  type        = string
-  description = "The ID of the VPC web security group"
+  type = string
 }
 
 resource "aws_instance" "ec2_instance" {
@@ -101,6 +106,6 @@ resource "aws_instance" "ec2_instance" {
 
   security_groups = [
     var.vpc_ssh_security_group_id,
-    var.vpc_web_security_group_id
+    var.vpc_web_security_group_id,
   ]
 }

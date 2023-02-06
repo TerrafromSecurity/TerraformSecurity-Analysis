@@ -19,6 +19,6 @@ resource "aws_instance" "example" {
 }
 
 # output block, get EC2 Instance Public IP from vm
-output "example_public_ip" {
-  value = aws_instance.example.public_ip
+output "name_1" {
+  value = aws_instance.name_0.public_ip
 }

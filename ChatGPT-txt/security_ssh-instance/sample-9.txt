@@ -12,10 +12,9 @@ provider "aws" {
 }
 
 # Create Security Group that allows port 22 inbound and all outbound ports
-resource "aws_security_group" "ssh" {
-  name        = "allow_ssh"
+rresource "aws_security_group" "ssh" {
+  name        = "ssh"
   description = "Allow SSH access"
-  vpc_id      = "<VPC_ID>"
 
   ingress {
     from_port   = 22
