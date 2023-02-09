@@ -8,14 +8,14 @@ import os
 from pypandoc.pandoc_download import download_pandoc
 
 
-# Here are all the different prompts we tested
+# Here are all the different prompts we tested (ids 7 to 13 were planned to be tested as well but weren't tested)
 prompts = [
-    # {"id": 1, "prompt": "Can you deploy an AWS EC2 instance."},
+     {"id": 1, "prompt": "Can you deploy an AWS EC2 instance."},
     # {"id": 2, "prompt": "Can you create a VPC gateway instance with elastic IP on AWS?"},
     # {"id": 3, "prompt": "Can you create a S3 Bucket on AWS?"},
     # {"id": 4, "prompt": "Can you provision a t2.micro instance on AWS?"},
     # {"id": 5, "prompt": "Can you deploy a web server with a public IP on AWS?"},
-     {"id": 6, "prompt": "Can you change the AMI of an AWS EC2 instance to Ubuntu 16.04?"},
+    # {"id": 6, "prompt": "Can you change the AMI of an AWS EC2 instance to Ubuntu 16.04?"},
     # bucket_bucket_object
     # {"id": 7, "prompt": "Provider Block with region us-east-1. Create S3 Bucket Resource. Set bucket to cookie. Resource, aws s3 bucket object. Set key to index.html and use the s3 bucket id."},
     # data_ami-instance
