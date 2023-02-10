@@ -1,0 +1,15 @@
+id,rule_id,count
+0,aws-ec2-no-public-ingress-sgr,1
+1,aws-ec2-require-vpc-flow-logs-for-all-vpcs,1
+2,aws-kms-auto-rotate-keys,1
+3,aws-s3-enable-bucket-encryption,2
+4,aws-s3-enable-versioning,2
+5,aws-s3-encryption-customer-key,3
+6,aws-s3-enable-bucket-logging,4
+7,aws-ec2-enable-at-rest-encryption,9
+8,aws-s3-block-public-acls,9
+9,aws-s3-block-public-policy,9
+10,aws-s3-ignore-public-acls,9
+11,aws-s3-no-public-buckets,9
+12,aws-s3-specify-public-access-block,9
+13,aws-ec2-enforce-http-token-imds,11
