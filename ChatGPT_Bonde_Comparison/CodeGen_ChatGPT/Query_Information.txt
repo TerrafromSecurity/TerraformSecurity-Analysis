@@ -1,0 +1,2 @@
+In order to generate the Terrafomr files we used the following prompt: 
+"Can you generate terraform code from these docstrings and add them as comment:" + all the comments discribing the blocks surrounded by double quotes (")

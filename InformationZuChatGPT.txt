@@ -1,3 +1,0 @@
-ChatGPT gibt oft mehr als eine antwort indem es vorschläge macht wie man gewisse dinge verbessern könnte oder erklärt im allgemeinen auch immer was es macht
-
-Erste eingabe for den docstrings war immer: "can you generate terraform code from these docstrings and add them as comment: " dass chatGPT sofort weiß dass es terraform generieren soll
