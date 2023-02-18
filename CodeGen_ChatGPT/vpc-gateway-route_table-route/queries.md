@@ -1,1 +1,0 @@
-Can you generate terraform code from these docstrings and add them as comment: "Provider Block: aws in us east 1" and "Create a AWS VPC resource with private network 10.0.0.0/16" and "AWS Internet Gateway with vpc id" and "Create AWS route table with vpc id" and "Create route resource. Use destination 0.0.0.0/0, gateway id and route talbe id"

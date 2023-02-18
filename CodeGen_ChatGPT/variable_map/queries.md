@@ -1,1 +1,0 @@
-Can you generate terraform code from these docstrings and add them as comment: "Provider AWS with region us-east-1 region and default profile" and "Create Variable that is a map of strings. The default is that key Terraform maps to true and Environment key maps to dev."

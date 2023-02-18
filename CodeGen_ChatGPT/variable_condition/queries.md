@@ -1,1 +1,0 @@
-Can you generate terraform code from these docstrings and add them as comment: "Terraform Block with the AWS provider" and "AWS provider block with variable region" and "vvaraible called ec2_ami_id with default ami-0915bcb5fa77e4892 and a condition to make sure string is an AMI id"

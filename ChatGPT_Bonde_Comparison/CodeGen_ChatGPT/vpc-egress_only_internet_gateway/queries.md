@@ -1,0 +1,1 @@
+Can you generate terraform code from these docstrings and add them as comment: "Provider Block: aws in us east 1" and "create vpc resource, use cidr block 10.1.0.0/16 and assign generated ipv6 cidr block" and "create an egress only internet gateway, use vpc id"

@@ -1,1 +1,0 @@
-Can you generate terraform code from these docstrings and add them as comment: "Provider AWS in region "us-east-1"" and "create workspace ip group, give it a name. Set a rule with source 150.24.14.0/24 and description LA"

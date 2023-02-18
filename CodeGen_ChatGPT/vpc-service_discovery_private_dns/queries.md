@@ -1,1 +1,0 @@
-Can you generate terraform code from these docstrings and add them as comment: "Provider Block: aws in us east 1.0" and "Create a VPC resource with cidr block 10.0.0.0/16. Enable DNS support and DNS hostnames" and "Make a service discovery private dns namespace resource. Give it the name 'example.terraform.local' and use vpc id"
