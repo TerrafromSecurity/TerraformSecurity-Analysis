@@ -6,6 +6,7 @@ from chatgpt_wrapper import ChatGPT
 import json
 import os
 from pypandoc.pandoc_download import download_pandoc
+import shutil
 
 # Usage:
 #   -If you want to use one of the prompts in the list prompts just remove the # in front on the prompt
@@ -18,12 +19,12 @@ from pypandoc.pandoc_download import download_pandoc
 # The results not only consist of the Terraform script but also one json per request that was sent to chatgpt
 
 prompts = [
-    # {"id": 1, "prompt": "Can you deploy an AWS EC2 instance."},
-    # {"id": 2, "prompt": "Can you create a VPC gateway instance with elastic IP on AWS?"},
-    # {"id": 3, "prompt": "Can you create a S3 Bucket on AWS?"},
-    # {"id": 4, "prompt": "Can you provision a t2.micro instance on AWS?"},
-    # {"id": 5, "prompt": "Can you deploy a web server with a public IP on AWS?"},
-    # {"id": 6, "prompt": "Can you change the AMI of an AWS EC2 instance to Ubuntu 16.04?"},
+     {"id": 1, "prompt": "Can you deploy an AWS EC2 instance."},
+     {"id": 2, "prompt": "Can you create a VPC gateway instance with elastic IP on AWS?"},
+     {"id": 3, "prompt": "Can you create a S3 Bucket on AWS?"},
+     {"id": 4, "prompt": "Can you provision a t2.micro instance on AWS?"},
+     {"id": 5, "prompt": "Can you deploy a web server with a public IP on AWS?"},
+     {"id": 6, "prompt": "Can you change the AMI of an AWS EC2 instance to Ubuntu 16.04?"},
 ]
 
 # These strings get concatinated in from of the prompt in order to get the output we want
@@ -63,6 +64,7 @@ def initFolders():
         print("create prompts folder")
         os.makedirs("data/results")
 
+
 # gets repsone from chatgpt and saves it into the .md and .tf file in tmp
 def getResponse(prompt: str):
     if debug:
@@ -76,6 +78,8 @@ def getResponse(prompt: str):
         print("ChatGPT: \n", response)
 
     # save reponse into a temporary markdown file
+    if os.path.exists("tmp/chatgpt.md"):
+        os.remove("tmp/chatgpt.md")
     f = open("tmp/chatgpt.md", "w+")
     f.write(response)
     f.close()
@@ -99,7 +103,7 @@ def runTfSec():
     # Run tfsec on the current tf file in the tmp folder
     result = subprocess.run(["tfsec", f"tmp/", "-f", "json"], capture_output=True)
     
-    # check if tfsec executed without errors
+    # check if tfsec returned a proper json  if not it failed
     try:
         tfSecOutput = json.loads(result.stdout.decode("utf-8"))
     except:
@@ -109,11 +113,11 @@ def runTfSec():
 
 # saves the final code and data list
 def finish(code, data, attempt, id):
-    f = open(f"data/results/prompt_{id}_final_{attempt}.tf", "w+")
+    f = open(f"data/results/prompt_{id}.tf", "w+")
     f.write(code)
     f.close()
 
-    f = open(f"data/results/prompt_{id}_final_{attempt}.json", "w+")
+    f = open(f"data/results/prompt_{id}.json", "w+")
     f.write(json.dumps(data))
     f.close()
 
@@ -137,7 +141,7 @@ def computePrompt(p):
                 print("Chatgpt didn't give another code example")
             
             # we set code to the last version of the code
-            f =  open(f"tmp/chatgpt.tf", "r")
+            f =  open("tmp/chatgpt.tf", "r")
             code = f.read()
             f.close()
 
@@ -146,7 +150,7 @@ def computePrompt(p):
             "prompt": str(prompt),
             "code": "no code from chatgpt",
             "tfsec": "",
-            "number_of_issues": ""
+            "number_of_issues": number_of_issues
             })
 
             finish(code, data, attempt, id)
@@ -209,14 +213,9 @@ def computePrompt(p):
             for i, issue in enumerate(tfSecOutput["results"]):
                 prompt = prompt + "Vulnerablitity " + str(i) + ":\n"
                 prompt = prompt + str(issue) + "\n"
-
-            # save data inbetween attempts in case the program crashes
-            f = open(f"data/results/prompt_{id}_try_{attempt}.json", "w+")
-            f.write(json.dumps(data))
-            f.close()
     
     if not stopped:
-        f = open(f"data/results/prompt_{id}_final_{attempt}.tf", "w+")
+        f = open(f"data/results/prompt_{id}.tf", "w+")
         f.write(code)
         f.close()
 
@@ -224,12 +223,20 @@ def computePrompt(p):
 debug = True
 bot = ChatGPT()
 
+basepath = "E:/Dokumente/Uni/Praktikum/TerraformSecurity-Analysis"
+
 response = bot.ask("Hello")
 if not (response == 'Your ChatGPT session is not usable.\n* Run this program with the `install` parameter and log in to ChatGPT.\n* If you think you are already logged in, try running the `session` command.'):
     initFolders()
 
-    for p in prompts:
-        computePrompt(p)
+    for sample in range(50):
+        for i, p in enumerate(prompts):
+            computePrompt(p)
+            bot.new_conversation()
+            os.mkdir(f"{basepath}/data/prototype_A_results/prompt{i+1}/sample{sample}")
+            shutil.move(f"{basepath}/data/results/prompt_{i+1}.tf", f"{basepath}/data/prototype_A_results/prompt{i+1}/sample{sample}/prompt_{i+1}.tf")
+            shutil.move(f"{basepath}/data/results/prompt_{i+1}.json", f"{basepath}/data/prototype_A_results/prompt{i+1}/sample{sample}/prompt_{i+1}.json")     
+
 
     if os.path.exists("tmp/chatgpt.md"):
         os.remove("tmp/chatgpt.md")
