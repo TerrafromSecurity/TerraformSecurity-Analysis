@@ -1,5 +1,6 @@
 import subprocess
 import io
+
 import pypandoc
 import panflute
 from chatgpt_wrapper import ChatGPT
@@ -18,12 +19,12 @@ from pypandoc.pandoc_download import download_pandoc
 # The results not only consist of the Terraform script but also one json per request that was sent to chatgpt
 
 prompts = [
-    # {"id": 1, "prompt": "Can you deploy an AWS EC2 instance."},
-    # {"id": 2, "prompt": "Can you create a VPC gateway instance with elastic IP on AWS?"},
-    # {"id": 3, "prompt": "Can you create a S3 Bucket on AWS?"},
-    # {"id": 4, "prompt": "Can you provision a t2.micro instance on AWS?"},
-    # {"id": 5, "prompt": "Can you deploy a web server with a public IP on AWS?"},
-    # {"id": 6, "prompt": "Can you change the AMI of an AWS EC2 instance to Ubuntu 16.04?"},
+    {"id": 1, "prompt": "Can you deploy an AWS EC2 instance."},
+    {"id": 2, "prompt": "Can you create a VPC gateway instance with elastic IP on AWS?"},
+    {"id": 3, "prompt": "Can you create a S3 Bucket on AWS?"},
+    {"id": 4, "prompt": "Can you provision a t2.micro instance on AWS?"},
+    {"id": 5, "prompt": "Can you deploy a web server with a public IP on AWS?"},
+    {"id": 6, "prompt": "Can you change the AMI of an AWS EC2 instance to Ubuntu 16.04?"},
 ]
 
 # These strings get concatinated in from of the prompt in order to get the output we want
@@ -109,11 +110,11 @@ def runTfSec():
 
 # saves the final code and data list
 def finish(code, data, attempt, id):
-    f = open(f"data/results/prompt_{id}_final_{attempt}.tf", "w+")
+    f = open(f"data/results/prompt_{id}/final_{attempt}.tf", "w+")
     f.write(code)
     f.close()
 
-    f = open(f"data/results/prompt_{id}_final_{attempt}.json", "w+")
+    f = open(f"data/results/prompt_{id}/final_{attempt}.json", "w+")
     f.write(json.dumps(data))
     f.close()
 
@@ -122,12 +123,16 @@ def finish(code, data, attempt, id):
 def computePrompt(p):
     id, prompt = p.values()
     prompt = " ".join(settingsPrompts) + "\n" + prompt
+
+    # set up folder
+    if not os.path.exists(f"data/results/prompt_{id}"):
+        os.mkdir(f"data/results/prompt_{id}")
     
     # this list saves the prompt and outputs made in the process
     data = []
     stopped = False
 
-    for attempt in range(5):
+    for attempt in range(10):
         # get the code from the current prompt
         code = getResponse(prompt)
 
@@ -211,12 +216,12 @@ def computePrompt(p):
                 prompt = prompt + str(issue) + "\n"
 
             # save data inbetween attempts in case the program crashes
-            f = open(f"data/results/prompt_{id}_try_{attempt}.json", "w+")
+            f = open(f"data/results/prompt_{id}/try_{attempt}.json", "w+")
             f.write(json.dumps(data))
             f.close()
     
     if not stopped:
-        f = open(f"data/results/prompt_{id}_final_{attempt}.tf", "w+")
+        f = open(f"data/results/prompt_{id}/final_{attempt}.tf", "w+")
         f.write(code)
         f.close()
 
