@@ -14,11 +14,11 @@ import shutil
 
 prompts = [
     {"id": 1, "prompt": "Can you deploy an AWS EC2 instance."},
-    # {"id": 2, "prompt": "Can you create a VPC gateway instance with elastic IP on AWS?"},
-    # {"id": 3, "prompt": "Can you create a S3 Bucket on AWS?"},
-    # {"id": 4, "prompt": "Can you provision a t2.micro instance on AWS?"},
-    # {"id": 5, "prompt": "Can you deploy a web server with a public IP on AWS?"},
-    # {"id": 6, "prompt": "Can you change the AMI of an AWS EC2 instance to Ubuntu 16.04?"},
+    {"id": 2, "prompt": "Can you create a VPC gateway instance with elastic IP on AWS?"},
+    {"id": 3, "prompt": "Can you create a S3 Bucket on AWS?"},
+    {"id": 4, "prompt": "Can you provision a t2.micro instance on AWS?"},
+    {"id": 5, "prompt": "Can you deploy a web server with a public IP on AWS?"},
+    {"id": 6, "prompt": "Can you change the AMI of an AWS EC2 instance to Ubuntu 16.04?"},
 ]
 
 settingsPrompts = [
@@ -121,9 +121,6 @@ def computePrompt(p):
     prompt = " ".join(settingsPrompts) + "\n" + prompt
 
     # (1) Get first response and save to file
-    if debug:
-        print(f"### PROMPT: {prompt}")
-        print("Waiting for response ... ")
 
     code = getResponse(prompt)
         
@@ -276,19 +273,25 @@ def computePrompt(p):
 debug = True
 bot = ChatGPT()
 
-basepath = "E:/Dokumente/Uni/Praktikum/TerraformSecurity-Analysis"
+# basepath = "E:/Dokumente/Uni/Praktikum/TerraformSecurity-Analysis"
+basepath = "/Users/eliasberger/Documents/Programming/terraform-security-fixer"
 
 response = bot.ask("Hello")
 if not (response == 'Your ChatGPT session is not usable.\n* Run this program with the `install` parameter and log in to ChatGPT.\n* If you think you are already logged in, try running the `session` command.'):
     initFolders()
 
-    for sample in range(2):
+    for sample in range(10):
         for i, p in enumerate(prompts):
-            computePrompt(p)
-            bot.new_conversation()
-        os.mkdir(f"{basepath}/data/prototype_B_results/prompt{i+1}/sample{sample}")
-        shutil.move(f"{basepath}/data/results/prompt_{i+1}.tf", f"{basepath}/data/prototype_B_results/prompt{i+1}/sample{sample}/prompt_{i+1}.tf")
-        shutil.move(f"{basepath}/data/results/prompt_{i+1}.json", f"{basepath}/data/prototype_B_results/prompt{i+1}/sample{sample}/prompt_{i+1}.json")     
+            try:
+                computePrompt(p)
+                bot.new_conversation()
+            except:
+                print("Error while computing prompt")
+                continue
+
+            os.mkdir(f"{basepath}/data/prototype_B_results/prompt{i+1}/sample{sample}")
+            shutil.move(f"{basepath}/data/results/prompt_{i+1}.tf", f"{basepath}/data/prototype_B_results/prompt{i+1}/sample{sample}/prompt_{i+1}.tf")
+            shutil.move(f"{basepath}/data/results/prompt_{i+1}.json", f"{basepath}/data/prototype_B_results/prompt{i+1}/sample{sample}/prompt_{i+1}.json")
 
 
     if os.path.exists("tmp/chatgpt.md"):
@@ -297,7 +300,7 @@ if not (response == 'Your ChatGPT session is not usable.\n* Run this program wit
     if os.path.exists("tmp/chatgpt.tf"):
         os.remove("tmp/chatgpt.tf")
     
-    if os.path.exists("tmp"):
-        os.removedirs("tmp")
+    #if os.path.exists("tmp"):
+    #     os.removedirs("tmp")
 else:
     print("ChatGPT is not working")
