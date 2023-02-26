@@ -9,7 +9,7 @@ from pathlib import Path
 base_dir = "/Users/eliasberger/Documents/Uni/4_Semester/Hyperautomation/Generating-Terraform-configuration-files/data/aws-easy/"
 human = base_dir + "human-tf/"
 codex = base_dir + "codex-tf/"
-codeparrot = base_dir + "codeparrot-large-tf/"
+codeparrot = base_dir + "codeparrot-large-tf-tf/"
 gpt_2 = base_dir + "gpt-2-large-tf/"
 chatgpt = "/Users/eliasberger/Documents/Programming/terraform-security-fixer/CodeGen_ChatGPT"
 
@@ -33,3 +33,4 @@ print("Number of gpt-2 files affected", get_number_of_terraform_files_affected(g
 print("Number of chatgpt files affected", get_number_of_terraform_files_affected(chatgpt))
 # Number of gpt-2 files affected 245
 # Number of chatgpt files affected 376
+# Number of codex files affected XXX (ratio affected: 77.55%)
