@@ -7,3 +7,4 @@ git+https://github.com/mmabrouk/chatgpt-wrapper
 playwright
 pypandoc
 panflute
+scipy
