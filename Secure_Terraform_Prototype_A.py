@@ -227,7 +227,8 @@ def computePrompt(p):
 debug = True
 bot = ChatGPT()
 
-basepath = "E:/Dokumente/Uni/Praktikum/TerraformSecurity-Analysis"
+# basepath = "E:/Dokumente/Uni/Praktikum/TerraformSecurity-Analysis"
+basepath = "/Users/eliasberger/Documents/Programming/terraform-security-fixer"
 
 response = bot.ask("Hello")
 if not (response == 'Your ChatGPT session is not usable.\n* Run this program with the `install` parameter and log in to ChatGPT.\n* If you think you are already logged in, try running the `session` command.'):
@@ -235,20 +236,25 @@ if not (response == 'Your ChatGPT session is not usable.\n* Run this program wit
 
     for sample in range(50):
         for i, p in enumerate(prompts):
-            computePrompt(p)
-            bot.new_conversation()
+            try:
+                computePrompt(p)
+                bot.new_conversation()
+            except:
+                print("Error")
+                continue
+
             os.mkdir(f"{basepath}/data/prototype_A_results/prompt{i+1}/sample{sample}")
             shutil.move(f"{basepath}/data/results/prompt_{i+1}.tf", f"{basepath}/data/prototype_A_results/prompt{i+1}/sample{sample}/prompt_{i+1}.tf")
             shutil.move(f"{basepath}/data/results/prompt_{i+1}.json", f"{basepath}/data/prototype_A_results/prompt{i+1}/sample{sample}/prompt_{i+1}.json")
 
 
-    if os.path.exists("tmp/chatgpt.md"):
-        os.remove("tmp/chatgpt.md")
-    
-    if os.path.exists("tmp/chatgpt.tf"):
-        os.remove("tmp/chatgpt.tf")
-    
-    if os.path.exists("tmp"):
+    # if os.path.exists("tmp/chatgpt.md"):
+    #     os.remove("tmp/chatgpt.md")
+    #
+    # if os.path.exists("tmp/chatgpt.tf"):
+    #     os.remove("tmp/chatgpt.tf")
+    #
+    # if os.path.exists("tmp"):
         os.removedirs("tmp")
 else:
     print("ChatGPT is not working")
