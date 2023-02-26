@@ -1,0 +1,8 @@
+[
+  {
+    "prompt": "Can you create terraform configuration code in the following? Don't forget the starting terraform block. Only print out a single code block per response. Fill any placeholders with dummy values. The code should be generated based on the following description.\nCan you create a VPC gateway instance with elastic IP on AWS?",
+    "code": "terraform {\n  required_providers {\n    aws = {\n      source = \"hashicorp/aws\"\n      version = \"~> 3.0\"\n    }\n  }\n}\n\nresource \"aws_vpc\" \"example\" {\n  cidr_block = \"10.0.0.0/16\"\n}\n\nresource \"aws_internet_gateway\" \"example\" {\n  vpc_id = aws_vpc.example.id\n}\n\nresource \"aws_eip\" \"example\" {\n  vpc = true\n}\n\nresource \"aws_network_interface\" \"example\" {\n  subnet_id = aws_subnet.example.id\n  private_ips = [aws_eip.example.public_ip]\n  vpc_id = aws_vpc.example.id\n}",
+    "tfsec": "{\"results\": null}",
+    "number_of_issues": "0"
+  }
+]

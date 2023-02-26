@@ -4,7 +4,7 @@ import pandas as pd
 # get all json files that store our interactions with chatgpt
 # these are the final, optimized files
 json_files_final_run = [
-    os.path.join(dp, f) for dp, dn, fn in os.walk("../data/prompts_new_format") for f in fn
+    os.path.join(dp, f) for dp, dn, fn in os.walk("../data/strategy_A_results") for f in fn
     if ("final" in f) and f.endswith(".json")]
 
 total_files = len(json_files_final_run)
