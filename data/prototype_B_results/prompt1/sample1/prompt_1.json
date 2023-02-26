@@ -1,0 +1,1 @@
+[{"prompt": "Can you create terraform configuration code in the following? Don't forget the starting terraform block. Only print out a single code block per response. Fill any placeholders with dummy values. The code should be generated based on the following description.\nCan you deploy an AWS EC2 instance.", "code": "no code from chatgpt", "tfsec": "", "number_of_issues": ""}]
